@@ -1771,3 +1771,104 @@ textarea.check-item-input {
     flex-wrap: wrap;
   }
 }
+
+/* =====================================================
+   FREQUENCY INDICATORS (常態固定 / 每月定期 / 特殊檔期)
+   ===================================================== */
+.freq-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.freq-filter-btn {
+  border: 1px solid var(--border);
+  background: var(--paper);
+  color: var(--ink-muted);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.13s ease;
+  white-space: nowrap;
+}
+.freq-filter-btn:hover {
+  border-color: #c2ae94;
+  color: var(--ink);
+}
+.freq-filter-btn.active {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+.freq-filter-btn.freq-regular.active {
+  background: var(--sage);
+  border-color: var(--sage);
+  color: #f7f4ee;
+}
+.freq-filter-btn.freq-periodic.active {
+  background: #a86b24;
+  border-color: #a86b24;
+  color: #f9f5ed;
+}
+.freq-filter-btn.freq-special.active {
+  background: var(--rust);
+  border-color: var(--rust);
+  color: #f9f5ed;
+}
+
+/* Inline Venue Row Meta + Micro Frequency Tag */
+.venue-row-meta {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+.freq-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.freq-tag.freq-regular,
+.freq-pill-detail.freq-regular {
+  background: var(--sage-soft);
+  color: var(--sage);
+}
+.freq-tag.freq-periodic,
+.freq-pill-detail.freq-periodic {
+  background: #f5e7d2;
+  color: #935b17;
+}
+.freq-tag.freq-special,
+.freq-pill-detail.freq-special {
+  background: var(--rust-soft);
+  color: var(--rust);
+}
+
+/* Right Detail Pane Clear Frequency Banner Tag */
+.detail-meta-left {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.freq-pill-detail {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  width: fit-content;
+}

@@ -7,6 +7,7 @@ const EMPTY_FORM = {
   name: '',
   venue: '',
   category: '毛孩主題市集',
+  frequencyType: '常態固定',
   schedule: '',
   defaultDays: 2,
   rentPerDay: 1500,
@@ -71,6 +72,7 @@ export default function MarketFormModal({ isOpen, editingItem, onClose, onSave, 
                 <option value="中部">中部</option>
                 <option value="南部">南部</option>
                 <option value="東部">東部</option>
+                <option value="離島">離島</option>
               </select>
             </div>
             <div className="field">
@@ -100,6 +102,17 @@ export default function MarketFormModal({ isOpen, editingItem, onClose, onSave, 
                 <option value="毛孩主題市集">毛孩主題市集</option>
                 <option value="文創假日市集">文創假日市集</option>
                 <option value="零租金拍片公園">零租金拍片公園</option>
+              </select>
+            </div>
+            <div className="field">
+              <label>擺攤出現頻率</label>
+              <select
+                value={form.frequencyType || '常態固定'}
+                onChange={(e) => set('frequencyType', e.target.value)}
+              >
+                <option value="常態固定">● 常態固定（每週六日／長期都有）</option>
+                <option value="每月定期">◐ 每月定期（每月／每季開辦）</option>
+                <option value="特殊檔期">◆ 特殊檔期（年度大展或節慶限定）</option>
               </select>
             </div>
             <div className="field">

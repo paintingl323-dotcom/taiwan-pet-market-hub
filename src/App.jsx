@@ -11,12 +11,44 @@ import ChecklistTab from './components/ChecklistTab';
 import MarketFormModal from './components/MarketFormModal';
 
 const STORAGE_KEYS = {
-  markets: 'tw_pet_markets_v2',
+  marketsLegacyV2: 'tw_pet_markets_v2',
+  marketsLegacyV3: 'tw_pet_markets_v3',
+  markets: 'tw_pet_markets_v4',
   favorites: 'tw_pet_favs_v2',
   checklistLegacy: 'tw_pet_checklist_v1',
   checklistSections: 'tw_pet_checklist_sections_v2',
   products: 'tw_pet_products_v1',
 };
+
+function loadInitialMarkets() {
+  try {
+    const savedV4 = localStorage.getItem(STORAGE_KEYS.markets);
+    if (savedV4) {
+      const parsed = JSON.parse(savedV4);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+    const prevRaw =
+      localStorage.getItem(STORAGE_KEYS.marketsLegacyV3) ||
+      localStorage.getItem(STORAGE_KEYS.marketsLegacyV2);
+    if (prevRaw) {
+      const parsedPrev = JSON.parse(prevRaw);
+      if (Array.isArray(parsedPrev)) {
+        const customOld = parsedPrev
+          .filter((m) => m.isCustom)
+          .map((m) => ({ frequencyType: '特殊檔期', ...m }));
+        const notesById = new Map(parsedPrev.map((m) => [m.id, m.notes || '']));
+        const mergedBuiltins = INITIAL_MARKETS.map((m) => ({
+          ...m,
+          notes: notesById.get(m.id) || m.notes || '',
+        }));
+        return [...customOld, ...mergedBuiltins];
+      }
+    }
+  } catch {
+    // fallback
+  }
+  return INITIAL_MARKETS;
+}
 
 function flatChecklistToSections(flatList) {
   const map = new Map();
@@ -90,7 +122,7 @@ function buildCalcForMarket(m) {
 
 export default function App() {
   const [activeView, setActiveView] = useState('workspace');
-  const [markets, setMarkets] = useState(() => loadSaved(STORAGE_KEYS.markets, INITIAL_MARKETS));
+  const [markets, setMarkets] = useState(loadInitialMarkets);
   const [favorites, setFavorites] = useState(() =>
     loadSaved(STORAGE_KEYS.favorites, ['n-1', 's-2', 's-3', 's-8'])
   );
@@ -105,16 +137,17 @@ export default function App() {
   // Filters & Selection (synced to first venue on initial load)
   const [regionFilter, setRegionFilter] = useState('全部');
   const [categoryFilter, setCategoryFilter] = useState('全部類型');
+  const [frequencyFilter, setFrequencyFilter] = useState('不限頻率');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedId, setSelectedId] = useState(() => {
-    const initMarkets = loadSaved(STORAGE_KEYS.markets, INITIAL_MARKETS);
+    const initMarkets = loadInitialMarkets();
     return initMarkets[0]?.id || INITIAL_MARKETS[0].id;
   });
   const [mobileDetailOpen, setMobileDetailOpen] = useState(false);
 
   // Live Ledger State (100% transparent 6 visible inputs, synced to selected venue)
   const [calcState, setCalcState] = useState(() => {
-    const initMarkets = loadSaved(STORAGE_KEYS.markets, INITIAL_MARKETS);
+    const initMarkets = loadInitialMarkets();
     return buildCalcForMarket(initMarkets[0] || INITIAL_MARKETS[0]);
   });
 
@@ -166,13 +199,15 @@ export default function App() {
     return markets.filter((m) => {
       if (regionFilter !== '全部' && m.region !== regionFilter) return false;
       if (categoryFilter !== '全部類型' && m.category !== categoryFilter) return false;
+      if (frequencyFilter !== '不限頻率' && (m.frequencyType || '特殊檔期') !== frequencyFilter)
+        return false;
       if (q) {
-        const hay = `${m.region} ${m.city} ${m.name} ${m.venue} ${m.organizer} ${m.highlights} ${m.notes}`.toLowerCase();
+        const hay = `${m.region} ${m.city} ${m.name} ${m.venue} ${m.organizer} ${m.highlights} ${m.notes} ${m.frequencyType || ''}`.toLowerCase();
         if (!hay.includes(q)) return false;
       }
       return true;
     });
-  }, [markets, regionFilter, categoryFilter, searchTerm]);
+  }, [markets, regionFilter, categoryFilter, frequencyFilter, searchTerm]);
 
   const selectedMarket = useMemo(() => {
     return (
@@ -256,6 +291,7 @@ export default function App() {
     setMarkets(INITIAL_MARKETS);
     setRegionFilter('全部');
     setCategoryFilter('全部類型');
+    setFrequencyFilter('不限頻率');
     setSearchTerm('');
     handleSelectMarket(INITIAL_MARKETS[0]);
   };
@@ -291,7 +327,7 @@ export default function App() {
 
   const exportToCsv = (rows, filenamePrefix = '全台毛孩零食擺攤與寵物展清單') => {
     const headers = [
-      '地區', '縣市', '類型', '場地名稱', '舉辦地點', '檔期', '天數',
+      '地區', '縣市', '類型', '出現頻率', '場地名稱', '舉辦地點', '檔期', '天數',
       '每日攤租(元)', '每日電費(元)', '器材預估(元)', '適合客群', '官方網址', '筆記',
     ];
     const esc = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
@@ -299,7 +335,7 @@ export default function App() {
       headers.map(esc).join(','),
       ...rows.map((m) =>
         [
-          m.region, m.city, m.category, m.name, m.venue, m.schedule, m.defaultDays,
+          m.region, m.city, m.category, m.frequencyType || '特殊檔期', m.name, m.venue, m.schedule, m.defaultDays,
           m.rentPerDay, m.electricityPerDay, m.equipmentFee, m.petAudience, m.url, m.notes,
         ]
           .map(esc)
@@ -449,6 +485,8 @@ export default function App() {
           setRegionFilter={setRegionFilter}
           categoryFilter={categoryFilter}
           setCategoryFilter={setCategoryFilter}
+          frequencyFilter={frequencyFilter}
+          setFrequencyFilter={setFrequencyFilter}
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
           favorites={favorites}

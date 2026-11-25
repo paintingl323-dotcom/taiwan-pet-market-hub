@@ -10,7 +10,13 @@ import {
   ArrowLeft,
   ExternalLink,
 } from 'lucide-react';
-import { REGIONS, CATEGORIES, QUICK_PORTALS } from '../data/marketsData';
+import {
+  REGIONS,
+  CATEGORIES,
+  FREQUENCIES,
+  FREQUENCY_META,
+  QUICK_PORTALS,
+} from '../data/marketsData';
 
 const fmt = (n) => Math.round(Number(n || 0)).toLocaleString('zh-TW');
 
@@ -24,6 +30,8 @@ export default function SplitWorkspace({
   setRegionFilter,
   categoryFilter,
   setCategoryFilter,
+  frequencyFilter,
+  setFrequencyFilter,
   searchTerm,
   setSearchTerm,
   favorites,
@@ -105,7 +113,10 @@ export default function SplitWorkspace({
   };
 
   const isFiltered =
-    regionFilter !== '全部' || categoryFilter !== '全部類型' || searchTerm.trim() !== '';
+    regionFilter !== '全部' ||
+    categoryFilter !== '全部類型' ||
+    frequencyFilter !== '不限頻率' ||
+    searchTerm.trim() !== '';
 
   const isSelectedFav = selectedMarket ? favorites.includes(selectedMarket.id) : false;
 
@@ -159,6 +170,24 @@ export default function SplitWorkspace({
                 ))}
               </select>
             </div>
+
+            <div className="freq-filter-row" role="group" aria-label="依出現頻率篩選">
+              {FREQUENCIES.map((f) => {
+                const meta = FREQUENCY_META[f];
+                return (
+                  <button
+                    key={f}
+                    type="button"
+                    className={`freq-filter-btn ${meta ? meta.className : ''} ${
+                      frequencyFilter === f ? 'active' : ''
+                    }`}
+                    onClick={() => setFrequencyFilter(f)}
+                  >
+                    {meta ? `${meta.symbol} ${meta.short}` : '全部頻率'}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           <div className="venue-list-wrap">
@@ -203,7 +232,15 @@ export default function SplitWorkspace({
 
                       <div className="venue-row-bottom">
                         <span className="venue-row-meta">
-                          {m.city} · {m.category}
+                          <span>{m.city} · {m.category}</span>
+                          {(() => {
+                            const fMeta = FREQUENCY_META[m.frequencyType] || FREQUENCY_META['特殊檔期'];
+                            return (
+                              <span className={`freq-tag ${fMeta.className}`}>
+                                {fMeta.symbol} {fMeta.short}
+                              </span>
+                            );
+                          })()}
                         </span>
                         <span className={`venue-row-price ${dailyAll === 0 ? 'free' : ''}`}>
                           {dailyAll === 0 ? '免費拍片' : `NT$ ${fmt(dailyAll)}／天`}
@@ -240,9 +277,20 @@ export default function SplitWorkspace({
               {/* Compact Editorial Venue Header */}
               <div className="detail-header">
                 <div className="detail-meta-row">
-                  <span className="detail-place-tag">
-                    {selectedMarket.region} · {selectedMarket.city} · {selectedMarket.category}
-                  </span>
+                  <div className="detail-meta-left">
+                    <span className="detail-place-tag">
+                      {selectedMarket.region} · {selectedMarket.city} · {selectedMarket.category}
+                    </span>
+                    {(() => {
+                      const fMeta =
+                        FREQUENCY_META[selectedMarket.frequencyType] || FREQUENCY_META['特殊檔期'];
+                      return (
+                        <span className={`freq-pill-detail ${fMeta.className}`}>
+                          {fMeta.symbol} {fMeta.long}
+                        </span>
+                      );
+                    })()}
+                  </div>
 
                   <div className="detail-actions no-print">
                     {selectedMarket.url && (
